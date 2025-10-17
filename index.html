@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DSRT Games</title>
+
+  <!-- FONT + STYLE -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #0b0b0c;
+      color: #fff;
+    }
+    header {
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    header h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #00c2ff;
+    }
+    .search-bar {
+      flex: 1;
+      margin: 0 20px;
+    }
+    .search-bar input {
+      width: 100%;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      background: #1b1b1d;
+      color: #fff;
+    }
+    .filters {
+      display: flex;
+      gap: 10px;
+    }
+    .filters button {
+      background: #1b1b1d;
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      padding: 8px 14px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .filters button.active {
+      background: #00c2ff;
+      color: #000;
+      font-weight: 600;
+    }
+
+    main { padding: 20px 30px; }
+
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .game-card {
+      background: #161616;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .game-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.5);
+    }
+    .game-card img {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+    }
+    .game-info { padding: 10px 12px; }
+    .game-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0;
+      color: #fff;
+    }
+    .game-category { font-size: 13px; color: #aaa; }
+    .play-btn {
+      display: block;
+      text-align: center;
+      background: #00c2ff;
+      color: #000;
+      padding: 8px;
+      border-radius: 6px;
+      margin-top: 10px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .play-btn:hover { background: #00ffff; }
+    @media (max-width: 600px) {
+      header { flex-direction: column; align-items: flex-start; }
+      .search-bar { width: 100%; margin: 10px 0; }
+      .filters { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>DSRT Games</h1>
+    <div class="search-bar">
+      <input id="searchInput" type="text" placeholder="Search games..." />
+    </div>
+    <div class="filters" id="filters"></div>
+  </header>
+
+  <main>
+    <div id="gameGrid" class="game-grid"></div>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    // 🔗 Supabase kamu
+    const SUPABASE_URL = "https://hewzjqetbvnjtiixwbwz.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhld3pqcWV0YnZuanRpaXh3Ynd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2OTY2MzIsImV4cCI6MjA3NjI3MjYzMn0.phZN1vCUtsUvkyB6rJAiZP8qeSlhiMsLRdKKNqVzZ6Y";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const grid = document.getElementById("gameGrid");
+    const searchInput = document.getElementById("searchInput");
+    const filtersContainer = document.getElementById("filters");
+
+    let allGames = [];
+    let currentCategory = "All";
+
+    async function loadGames() {
+      const { data, error } = await supabase.from("games").select("*");
+      if (error) {
+        console.error(error);
+        grid.innerHTML = "<p>Error loading games.</p>";
+        return;
+      }
+
+      allGames = data;
+      const categories = ["All", ...new Set(data.map(g => g.category))];
+      renderFilters(categories);
+      renderGames(data);
+    }
+
+    function renderFilters(categories) {
+      filtersContainer.innerHTML = "";
+      categories.forEach(cat => {
+        const btn = document.createElement("button");
+        btn.textContent = cat;
+        btn.classList.toggle("active", cat === "All");
+        btn.onclick = () => {
+          currentCategory = cat;
+          document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          filterGames();
+        };
+        filtersContainer.appendChild(btn);
+      });
+    }
+
+    function renderGames(games) {
+      grid.innerHTML = "";
+      if (!games.length) {
+        grid.innerHTML = "<p>No games found.</p>";
+        return;
+      }
+
+      games.forEach(game => {
+        const card = document.createElement("div");
+        card.className = "game-card";
+        card.innerHTML = `
+          <img src="${game.thumbnail_url}" alt="${game.title}">
+          <div class="game-info">
+            <h3 class="game-title">${game.title}</h3>
+            <p class="game-category">${game.category}</p>
+            <a href="${game.game_url}" target="_blank" class="play-btn">Play</a>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterGames() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const filtered = allGames.filter(game => {
+        const matchCategory = currentCategory === "All" || game.category === currentCategory;
+        const matchSearch = game.title.toLowerCase().includes(searchTerm);
+        return matchCategory && matchSearch;
+      });
+      renderGames(filtered);
+    }
+
+    searchInput.addEventListener("input", filterGames);
+    loadGames();
+  </script>
+</body>
+</html>
