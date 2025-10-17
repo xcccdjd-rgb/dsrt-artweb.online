@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Detail</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: sans-serif; background: #c4f3f3; text-align: center; }
+    .game-card { border-radius: 20px; background: white; margin: 20px auto; padding: 10px; width: 90%; max-width: 400px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .game-thumb { border-radius: 15px; width: 100%; }
+    .play-btn { display: inline-block; background: #007aff; color: white; padding: 12px 20px; border-radius: 10px; text-decoration: none; margin-top: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; margin: 20px; }
+    .grid img { width: 100%; border-radius: 15px; }
+  </style>
+</head>
+<body>
+  <h2 id="game-title">Loading...</h2>
+  <div class="game-card">
+    <img id="game-thumb" class="game-thumb" />
+    <p id="game-dev"></p>
+    <a id="play-link" class="play-btn" target="_blank">Mainkan Sekarang</a>
+  </div>
+
+  <h3>Game Lainnya</h3>
+  <div id="other-games" class="grid"></div>
+
+  <script>
+    const supabaseUrl = 'https://hewzjqetbvnjtiixwbwz.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhld3pqcWV0YnZuanRpaXh3Ynd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2OTY2MzIsImV4cCI6MjA3NjI3MjYzMn0.phZN1vCUtsUvkyB6rJAiZP8qeSlhiMsLRdKKNqVzZ6Y';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+
+    async function loadGame() {
+      const { data, error } = await supabase.from('games').select('*').eq('id', id).single();
+      if (data) {
+        document.getElementById('game-title').textContent = data.title;
+        document.getElementById('game-thumb').src = data.thumbnail_url;
+        document.getElementById('game-dev').textContent = "oleh " + data.developer;
+        document.getElementById('play-link').href = data.game_url;
+      }
+    }
+
+    async function loadOthers() {
+      const { data } = await supabase.from('games').select('*').neq('id', id).limit(8);
+      const container = document.getElementById('other-games');
+      container.innerHTML = data.map(g => `
+        <a href="game.html?id=${g.id}">
+          <img src="${g.thumbnail_url}" title="${g.title}" />
+        </a>
+      `).join('');
+    }
+
+    loadGame();
+    loadOthers();
+  </script>
+</body>
+</html>
