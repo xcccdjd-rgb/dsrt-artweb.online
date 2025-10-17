@@ -1,211 +1,362 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DSRT Games</title>
-
-  <!-- FONT + STYLE -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GLZ Games — Play Inline</title>
   <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: #0b0b0c;
-      color: #fff;
+    :root{
+      --bg-dark:#0d1117; --panel-dark:#0f1720; --muted:#9aa4b2; --accent:#00bcd4;
+      --bg-light:#f6f7fb; --panel-light:#ffffff; --text-light:#0b1220;
+      --card-radius:12px;
     }
-    header {
-      background: #111;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 15px 30px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    header h1 {
-      font-size: 22px;
-      font-weight: 600;
-      color: #00c2ff;
-    }
-    .search-bar {
-      flex: 1;
-      margin: 0 20px;
-    }
-    .search-bar input {
-      width: 100%;
-      padding: 8px 14px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-      font-size: 14px;
-      background: #1b1b1d;
-      color: #fff;
-    }
-    .filters {
-      display: flex;
-      gap: 10px;
-    }
-    .filters button {
-      background: #1b1b1d;
-      border: none;
-      color: #fff;
-      border-radius: 8px;
-      padding: 8px 14px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .filters button.active {
-      background: #00c2ff;
-      color: #000;
-      font-weight: 600;
-    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Roboto,Arial;}
+    body{background:var(--bg-dark);color:#e6eef6;padding:18px;transition:background .25s,color .25s;}
+    .container{max-width:1200px;margin:0 auto;}
+    header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap}
+    h1{font-size:20px;margin:0;display:flex;gap:8px;align-items:center}
+    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .search{display:flex;gap:8px;align-items:center;background:rgba(255,255,255,0.03);padding:8px;border-radius:10px}
+    .search input{background:transparent;border:0;color:inherit;outline:none;width:220px;font-size:14px}
+    select,button{font-size:14px}
+    .toggle-theme{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:10px;color:inherit;cursor:pointer}
 
-    main { padding: 20px 30px; }
+    #game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+    .card{background:var(--panel-dark);border-radius:var(--card-radius);overflow:hidden;box-shadow:0 8px 24px rgba(2,6,23,0.5);transition:transform .16s;display:flex;flex-direction:column}
+    .card:hover{transform:translateY(-6px)}
+    .thumb{height:150px;object-fit:cover;width:100%;display:block;background:#000}
+    .card-body{padding:12px;display:flex;flex-direction:column;gap:8px}
+    .title{font-weight:700;font-size:15px}
+    .meta{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+    .play-btn{background:linear-gradient(90deg,var(--accent),#00e5ff);border:none;padding:8px 12px;border-radius:10px;color:#052428;text-decoration:none;font-weight:700;cursor:pointer}
+    .btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:10px;color:inherit;cursor:pointer}
 
-    .game-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 20px;
-    }
-    .game-card {
-      background: #161616;
-      border-radius: 12px;
-      overflow: hidden;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .game-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 8px 15px rgba(0,0,0,0.5);
-    }
-    .game-card img {
-      width: 100%;
-      height: 130px;
-      object-fit: cover;
-    }
-    .game-info { padding: 10px 12px; }
-    .game-title {
-      font-size: 15px;
-      font-weight: 600;
-      margin: 0;
-      color: #fff;
-    }
-    .game-category { font-size: 13px; color: #aaa; }
-    .play-btn {
-      display: block;
-      text-align: center;
-      background: #00c2ff;
-      color: #000;
-      padding: 8px;
-      border-radius: 6px;
-      margin-top: 10px;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .play-btn:hover { background: #00ffff; }
-    @media (max-width: 600px) {
-      header { flex-direction: column; align-items: flex-start; }
-      .search-bar { width: 100%; margin: 10px 0; }
-      .filters { flex-wrap: wrap; }
+    .actions{display:flex;justify-content:center;margin:18px 0}
+    .btn.primary{background:var(--accent);border:none;color:#042}
+
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:flex;align-items:center;justify-content:center;z-index:999;opacity:0;pointer-events:none;transition:opacity .22s}
+    .modal-wrap{width:min(1120px,96%);max-height:92vh;background:var(--panel-dark);border-radius:10px;overflow:hidden;transform:translateY(20px) scale(.98);transition:all .22s;display:flex;flex-direction:column}
+    .modal-backdrop.show{opacity:1;pointer-events:auto}
+    .modal-wrap.show{transform:translateY(0) scale(1)}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid rgba(255,255,255,0.03)}
+    .modal-body{display:flex;gap:12px;padding:12px;flex:1;overflow:auto}
+    .modal-left{flex:0 0 720px;display:flex;flex-direction:column;gap:8px}
+    .modal-iframe{background:#000;border-radius:8px;height:540px;border:none;width:100%}
+    .modal-right{flex:1;display:flex;flex-direction:column;gap:8px;padding-right:8px}
+    .close-btn{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:18px}
+
+    body.light{background:var(--bg-light);color:var(--text-light)}
+    body.light .card{background:var(--panel-light);box-shadow:0 10px 30px rgba(10,15,25,0.06)}
+    body.light .search{background:rgba(2,6,23,0.03)}
+
+    @media (max-width:900px){
+      .modal-left{flex-basis:100%}
+      .modal-iframe{height:360px}
+      .thumb{height:120px}
+      .search input{width:140px}
     }
   </style>
 </head>
-
 <body>
-  <header>
-    <h1>DSRT Games</h1>
-    <div class="search-bar">
-      <input id="searchInput" type="text" placeholder="Search games..." />
+  <div class="container">
+    <header>
+      <h1>🎮 GLZ Games</h1>
+      <div class="controls">
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="opacity:.8"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="1.6" /></svg>
+          <input id="search" placeholder="Search games..." />
+        </div>
+        <select id="genreFilter"><option value="">All genres</option></select>
+        <select id="sortBy">
+          <option value="plays.desc">Most played</option>
+          <option value="rating.desc">Top rated</option>
+          <option value="newest.desc">Newest</option>
+        </select>
+        <button id="themeToggle" class="toggle-theme">Dark / Light</button>
+      </div>
+    </header>
+
+    <section id="game-grid"></section>
+
+    <div class="actions">
+      <button id="loadMore" class="btn primary">Load more</button>
     </div>
-    <div class="filters" id="filters"></div>
-  </header>
+  </div>
 
-  <main>
-    <div id="gameGrid" class="game-grid"></div>
-  </main>
-
-  <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-    // 🔗 Supabase kamu
-    const SUPABASE_URL = "https://hewzjqetbvnjtiixwbwz.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhld3pqcWV0YnZuanRpaXh3Ynd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2OTY2MzIsImV4cCI6MjA3NjI3MjYzMn0.phZN1vCUtsUvkyB6rJAiZP8qeSlhiMsLRdKKNqVzZ6Y";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    const grid = document.getElementById("gameGrid");
-    const searchInput = document.getElementById("searchInput");
-    const filtersContainer = document.getElementById("filters");
-
-    let allGames = [];
-    let currentCategory = "All";
-
-    async function loadGames() {
-      const { data, error } = await supabase.from("games").select("*");
-      if (error) {
-        console.error(error);
-        grid.innerHTML = "<p>Error loading games.</p>";
-        return;
-      }
-
-      allGames = data;
-      const categories = ["All", ...new Set(data.map(g => g.category))];
-      renderFilters(categories);
-      renderGames(data);
-    }
-
-    function renderFilters(categories) {
-      filtersContainer.innerHTML = "";
-      categories.forEach(cat => {
-        const btn = document.createElement("button");
-        btn.textContent = cat;
-        btn.classList.toggle("active", cat === "All");
-        btn.onclick = () => {
-          currentCategory = cat;
-          document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-          filterGames();
-        };
-        filtersContainer.appendChild(btn);
-      });
-    }
-
-    function renderGames(games) {
-      grid.innerHTML = "";
-      if (!games.length) {
-        grid.innerHTML = "<p>No games found.</p>";
-        return;
-      }
-
-      games.forEach(game => {
-        const card = document.createElement("div");
-        card.className = "game-card";
-        card.innerHTML = `
-          <img src="${game.thumbnail_url}" alt="${game.title}">
-          <div class="game-info">
-            <h3 class="game-title">${game.title}</h3>
-            <p class="game-category">${game.category}</p>
-            <a href="${game.game_url}" target="_blank" class="play-btn">Play</a>
+  <!-- modal -->
+  <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
+    <div id="modalWrap" class="modal-wrap" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <div>
+          <strong id="modalTitle">Game Title</strong>
+          <div id="modalSubtitle" style="font-size:13px;color:var(--muted)"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <a id="openNewTab" class="btn" target="_blank" rel="noopener">Open in new tab</a>
+          <button id="closeModal" class="close-btn">✕</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="modal-left">
+          <iframe id="modalFrame" class="modal-iframe" src="about:blank" title="Game preview"></iframe>
+          <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+            <div id="modalStats" style="color:var(--muted)"></div>
+            <div style="display:flex;gap:8px">
+              <button id="modalPlay" class="play-btn">Play</button>
+              <a id="modalOpen" class="btn" target="_blank" rel="noopener">Open</a>
+            </div>
           </div>
-        `;
-        grid.appendChild(card);
-      });
-    }
+        </div>
+        <div class="modal-right">
+          <div id="modalDesc" style="color:var(--muted)"></div>
+          <div style="flex:1"></div>
+          <div style="color:var(--muted)">If preview doesn't load due to embedding policy, click <strong>Open in new tab</strong>.</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    function filterGames() {
-      const searchTerm = searchInput.value.toLowerCase();
-      const filtered = allGames.filter(game => {
-        const matchCategory = currentCategory === "All" || game.category === currentCategory;
-        const matchSearch = game.title.toLowerCase().includes(searchTerm);
-        return matchCategory && matchSearch;
-      });
-      renderGames(filtered);
-    }
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-    searchInput.addEventListener("input", filterGames);
-    loadGames();
-  </script>
+  // ===== CONFIG (use your provided project url & anon key) =====
+  const SUPABASE_URL = 'https://hewzjqetbvnjtiixwbwz.supabase.co'
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhld3pqcWV0YnZuanRpaXh3Ynd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2OTY2MzIsImV4cCI6MjA3NjI3MjYzMn0.phZN1vCUtsUvkyB6rJAiZP8qeSlhiMsLRdKKNqVzZ6Y'
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+  // UI refs
+  const grid = document.getElementById('game-grid')
+  const loadMoreBtn = document.getElementById('loadMore')
+  const searchInput = document.getElementById('search')
+  const genreFilter = document.getElementById('genreFilter')
+  const themeToggle = document.getElementById('themeToggle')
+  const sortBy = document.getElementById('sortBy')
+
+  const modalBackdrop = document.getElementById('modalBackdrop')
+  const modalWrap = document.getElementById('modalWrap')
+  const modalTitle = document.getElementById('modalTitle')
+  const modalSubtitle = document.getElementById('modalSubtitle')
+  const modalFrame = document.getElementById('modalFrame')
+  const modalStats = document.getElementById('modalStats')
+  const modalDesc = document.getElementById('modalDesc')
+  const openNewTab = document.getElementById('openNewTab')
+  const modalPlay = document.getElementById('modalPlay')
+  const modalOpen = document.getElementById('modalOpen')
+  const closeModal = document.getElementById('closeModal')
+
+  // state
+  let page = 0
+  const limit = 20
+  let lastQuery = ''
+  let currentGenre = ''
+  let loading = false
+  let exhausted = false
+  let selectedGame = null
+
+  function escapeHtml(s=''){ return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;') }
+
+  function debounce(fn, ms=300){ let t; return (...a)=>{ clearTimeout(t); t = setTimeout(()=>fn(...a), ms) } }
+
+  async function loadGenres(){
+    const { data, error } = await supabase.from('games').select('category')
+    if(error){ console.warn('genre fetch', error); return }
+    const genres = Array.from(new Set((data||[]).map(r=>r.category).filter(Boolean))).sort()
+    genres.forEach(g=>{
+      const opt = document.createElement('option'); opt.value = g; opt.textContent = g; genreFilter.appendChild(opt)
+    })
+  }
+
+  function renderCard(game){
+    const el = document.createElement('article')
+    el.className = 'card'
+    el.innerHTML = `
+      <img class="thumb" loading="lazy" src="${escapeHtml(game.thumbnail_url || '')}" alt="${escapeHtml(game.title || '')}" />
+      <div class="card-body">
+        <div class="title">${escapeHtml(game.title || 'Untitled')}</div>
+        <div class="meta"><div style="color:var(--muted)">${escapeHtml(game.category||game.genre||'')}</div><div style="font-weight:700">⭐ ${Number(game.rating||0).toFixed(1)}</div></div>
+        <div class="meta"><div style="color:var(--muted)">Plays: ${Number(game.views||game.plays||0).toLocaleString()}</div><div style="color:var(--muted)">${escapeHtml(game.slug||'')}</div></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn preview">Preview</button>
+          <button class="play-btn inline-play">Play</button>
+        </div>
+      </div>
+    `
+    // preview opens modal but doesn't auto-fullscreen
+    el.querySelector('.preview').addEventListener('click', ()=> openModal(game, { autoplay:false }))
+    // inline play: open modal and autoplay + request fullscreen
+    el.querySelector('.inline-play').addEventListener('click', async ()=>{
+      openModal(game, { autoplay:true, requestFullscreen:true })
+    })
+    return el
+  }
+
+  // load batch
+  async function loadBatch(reset=false){
+    if(loading || exhausted) return
+    loading = true
+    loadMoreBtn.textContent = 'Loading...'
+    if(reset){ page = 0; exhausted = false; grid.innerHTML = '' }
+
+    const from = page*limit, to = from + limit - 1
+    try{
+      let qb = supabase.from('games').select('*')
+      if(lastQuery) qb = qb.ilike('title', `%${lastQuery}%`)
+      if(currentGenre) qb = qb.eq('category', currentGenre).or(`category.eq.${currentGenre}`)
+      // sorting
+      const order = sortBy.value || 'plays.desc'
+      if(order === 'plays.desc') qb = qb.order('views', { ascending: false })
+      else if(order === 'rating.desc') qb = qb.order('rating', { ascending: false })
+      else if(order === 'newest.desc') qb = qb.order('created_at', { ascending: false })
+      qb = qb.range(from, to)
+      const { data, error } = await qb
+      if(error && /created_at/i.test(error.message||'')) {
+        // fallback if created_at not exist
+        let qb2 = supabase.from('games').select('*')
+        if(lastQuery) qb2 = qb2.ilike('title', `%${lastQuery}%`)
+        if(currentGenre) qb2 = qb2.eq('category', currentGenre)
+        qb2 = qb2.order('id', { ascending: false }).range(from, to)
+        const { data: data2, error: e2 } = await qb2
+        if(e2) throw e2
+        handleBatch(data2)
+      } else if(error) {
+        throw error
+      } else {
+        handleBatch(data)
+      }
+    }catch(err){
+      console.error('Load error', err)
+      loadMoreBtn.textContent = 'Load more'
+      loading = false
+    }
+  }
+
+  function handleBatch(data){
+    if(!data || data.length === 0){ exhausted = true; loadMoreBtn.textContent = 'No more'; loading=false; return }
+    data.forEach(g => grid.appendChild(renderCard(g)))
+    page += 1
+    loadMoreBtn.textContent = 'Load more'
+    loading = false
+  }
+
+  // open modal and optionally autoplay + request fullscreen
+  function openModal(game, opts={autoplay:false, requestFullscreen:false}){
+    selectedGame = game
+    modalTitle.textContent = game.title || 'Untitled'
+    modalSubtitle.textContent = `${game.category || game.genre || '-'} • ⭐ ${Number(game.rating||0).toFixed(1)} • ${Number(game.views||game.plays||0).toLocaleString()} plays`
+    modalStats.textContent = `Rating ${Number(game.rating||0).toFixed(1)} • ${Number(game.views||game.plays||0).toLocaleString()} plays`
+    modalDesc.textContent = game.description || ''
+    openNewTabHref(game.game_url || game.game_url || '#')
+    modalOpen.href = game.game_url || '#'
+    openNewTab.href = game.game_url || '#'
+    // show modal
+    modalBackdrop.classList.add('show')
+    modalWrap.classList.add('show')
+    if(opts.autoplay){
+      // set src then try fullscreen (fullscreen must be triggered by user gesture — these handlers are called from user clicks)
+      modalFrame.src = game.game_url || ''
+      // if user asked fullscreen and browser supports
+      if(opts.requestFullscreen){
+        // try request fullscreen on iframe wrapper after a tiny delay to allow src load to start
+        setTimeout(async ()=>{
+          try{
+            // attempt to request fullscreen on the iframe element's parent
+            if(modalFrame.requestFullscreen){
+              await modalFrame.requestFullscreen()
+            } else if(modalWrap.requestFullscreen) {
+              await modalWrap.requestFullscreen()
+            }
+          }catch(e){
+            // ignore fullscreen errors (user agent or CSP)
+            console.warn('Fullscreen failed', e)
+          }
+        }, 300)
+      }
+    } else {
+      // just preview (load src but do not request fullscreen)
+      modalFrame.src = game.game_url || ''
+    }
+  }
+
+  function openNewTabHref(url){
+    openNewTab.href = url || '#'
+    modalOpen.href = url || '#'
+  }
+
+  function closeModalFunc(){
+    modalWrap.classList.remove('show')
+    modalBackdrop.classList.remove('show')
+    // stop the iframe to avoid audio/network: reset src
+    try{ modalFrame.src = 'about:blank' }catch(e){}
+    selectedGame = null
+    // exit fullscreen if active (best-effort)
+    try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+  }
+
+  // handlers
+  const onSearch = debounce(async (e)=>{
+    lastQuery = e.target.value || ''
+    exhausted = false
+    await loadBatch(true)
+  }, 350)
+
+  async function onGenreChange(e){
+    currentGenre = e.target.value || ''
+    exhausted = false
+    await loadBatch(true)
+  }
+
+  async function onSortChange(){
+    exhausted = false
+    await loadBatch(true)
+  }
+
+  function initTheme(){
+    const saved = localStorage.getItem('glz_theme') || 'dark'
+    if(saved === 'light') document.body.classList.add('light')
+    themeToggle.addEventListener('click', ()=>{
+      document.body.classList.toggle('light')
+      localStorage.setItem('glz_theme', document.body.classList.contains('light') ? 'light' : 'dark')
+    })
+  }
+
+  // infinite scroll
+  function initInfiniteScroll(){
+    let ticking = false
+    window.addEventListener('scroll', ()=>{
+      if(ticking) return
+      ticking = true
+      requestAnimationFrame(()=>{
+        const nearBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 450
+        if(nearBottom && !loading && !exhausted) loadBatch(false)
+        ticking = false
+      })
+    })
+  }
+
+  // lifecycle
+  async function init(){
+    initTheme()
+    searchInput.addEventListener('input', onSearch)
+    genreFilter.addEventListener('change', onGenreChange)
+    sortBy.addEventListener('change', onSortChange)
+    loadMoreBtn.addEventListener('click', ()=> loadBatch(false))
+    closeModal.addEventListener('click', closeModalFunc)
+    modalBackdrop.addEventListener('click', (e)=> { if(e.target === modalBackdrop) closeModalFunc() })
+    modalPlay.addEventListener('click', ()=> {
+      if(!selectedGame) return
+      // user-clicked Play inside modal — ensure iframe src is set and request fullscreen
+      modalFrame.src = selectedGame.game_url || ''
+      try{ if(modalFrame.requestFullscreen) modalFrame.requestFullscreen() }catch(e){ console.warn('FS fail', e) }
+    })
+    // populate genres & initial batch
+    await loadGenres()
+    initInfiniteScroll()
+    await loadBatch(true)
+  }
+
+  init()
+
+</script>
 </body>
 </html>
